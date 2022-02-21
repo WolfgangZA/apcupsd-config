@@ -68,11 +68,11 @@ case "$1" in
     commfailure)
 	#echo "Warning communications lost with UPS ${2}" | ${WALL}
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication lost with UPS ${2}" >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication lost with UPS ${2}" | mail -s "Communication lost with UPS ${2}" support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication lost with UPS ${2}" | mail -s "Communication lost with UPS ${2}" test@test.com
     ;;
     commok)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication restored with UPS ${2}" >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication restored with UPS ${2}" | mail -s "Communication restored with UPS ${2}" support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication restored with UPS ${2}" | mail -s "Communication restored with UPS ${2}" test@test.com
     ;;
 #
 # powerout, onbattery, offbattery, mainsback events occur
@@ -82,11 +82,11 @@ case "$1" in
     ;;
     onbattery)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Power failure on UPS ${2}. Running on batteries." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Power failure on UPS ${2}. Running on batteries." | mail -s "Power failure on UPS ${2}. Running on batteries." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power failure on UPS ${2}. Running on batteries." | mail -s "Power failure on UPS ${2}. Running on batteries." test@test.com
     ;;
     offbattery)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Power has returned on UPS ${2}..." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Power has returned on UPS ${2}..." | mail -s "Power has returned on UPS ${2}..." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power has returned on UPS ${2}..." | mail -s "Power has returned on UPS ${2}..." test@test.com
     ;;
     mainsback)
 	if [ -f /etc/apcupsd/powerfail ] ; then
@@ -95,19 +95,19 @@ case "$1" in
     ;;
     failing)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery power exhausted on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery power exhausted on UPS ${2}. Doing shutdown." | mail -s "Battery power exhausted on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery power exhausted on UPS ${2}. Doing shutdown." | mail -s "Battery power exhausted on UPS ${2}. Doing shutdown." test@test.com
     ;;
     timeout)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery time limit exceeded on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery time limit exceeded on UPS ${2}. Doing shutdown." | mail -s "Battery time limit exceeded on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery time limit exceeded on UPS ${2}. Doing shutdown." | mail -s "Battery time limit exceeded on UPS ${2}. Doing shutdown." test@test.com
     ;;
     loadlimit)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery charge below limit on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery charge below limit on UPS ${2}. Doing shutdown." | mail -s "Remaining battery charge below limit on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery charge below limit on UPS ${2}. Doing shutdown." | mail -s "Remaining battery charge below limit on UPS ${2}. Doing shutdown." test@test.com
     ;;
     runlimit)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." | mail -s "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." | mail -s "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." test@test.com
     ;;
     doreboot)
 	echo "UPS ${2} initiating Reboot Sequence" | ${WALL}
@@ -116,22 +116,22 @@ case "$1" in
     doshutdown)
 	echo "UPS ${2} initiated Shutdown Sequence" | ${WALL}
 	echo $(date '+%d/%m/%Y %H:%M:%S') ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." | mail -s ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." | mail -s ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." test@test.com
 	${SHUTDOWN} -h now "apcupsd UPS ${2} initiated shutdown"
 	ssh root@172.24.1.2 "nohup /vmfs/volumes/datastore1/scripts/graceful_shutdown.sh > /dev/null 2>&1 &"
 	service apcupsd restart
     ;;
     annoyme)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Power problems with UPS ${2}. Please logoff." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Power problems with UPS ${2}. Please logoff." | mail -s "Power problems with UPS ${2}. Please logoff." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power problems with UPS ${2}. Please logoff." | mail -s "Power problems with UPS ${2}. Please logoff." test@test.com
     ;;
     emergency)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency Shutdown. Possible battery failure on UPS ${2}." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency Shutdown. Possible battery failure on UPS ${2}." | mail -s "Emergency Shutdown. Possible battery failure on UPS ${2}." support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency Shutdown. Possible battery failure on UPS ${2}." | mail -s "Emergency Shutdown. Possible battery failure on UPS ${2}." test@test.com
     ;;
     changeme)
 	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency! Batteries have failed on UPS ${2}. Change them NOW" >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
-	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency! Batteries have failed on UPS ${2}. Change them NOW" | mail -s "Emergency! Batteries have failed on UPS ${2}. Change them NOW" support@innovateit.co.mz
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency! Batteries have failed on UPS ${2}. Change them NOW" | mail -s "Emergency! Batteries have failed on UPS ${2}. Change them NOW" test@test.com
     ;;
     remotedown)
 	echo "Remote Shutdown. Beginning Shutdown Sequence." | ${WALL}
