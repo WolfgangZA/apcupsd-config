@@ -1,0 +1,152 @@
+#!/bin/sh
+#
+# Copyright (C) 1999-2002 Riccardo Facchetti <riccardo@master.oasi.gpa.it>
+#
+# platforms/apccontrol.  Generated from apccontrol.in by configure.
+#
+#  Note, this is a generic file that can be used by most
+#   systems. If a particular system needs to have something
+#   special, start with this file, and put a copy in the
+#   platform subdirectory.
+#
+
+#
+# These variables are needed for set up the autoconf other variables.
+#
+prefix=/usr
+exec_prefix=${prefix}
+
+APCPID=/var/run/apcupsd.pid
+APCUPSD=/sbin/apcupsd
+#SHUTDOWN=/sbin/shutdown
+SCRIPTSHELL=/bin/sh
+SCRIPTDIR=/etc/apcupsd
+#WALL=wall
+
+export SYSADMIN=root
+export APCUPSD_MAIL="mail"
+if [ -f $SCRIPTDIR/config ]; then . $SCRIPTDIR/config ; fi
+
+#
+# Concatenate all output from this script to the events file
+#  Note, the following kills the script in a power fail situation
+#   where the disks are mounted read-only.
+# exec >>/var/log/apcupsd.events 2>&1
+
+#
+# This piece is to substitute the default behaviour with your own script,
+# perl, or C program.
+# You can customize every single command creating an executable file (may be a
+# script or a compiled program) and calling it the same as the $1 parameter
+# passed by apcupsd to this script.
+#
+# After executing your script, apccontrol continues with the default action.
+# If you do not want apccontrol to continue, exit your script with exit 
+# code 99. E.g. "exit 99".
+#
+# WARNING: the apccontrol file will be overwritten every time you update your
+# apcupsd, doing `make install'. Your own customized scripts will _not_ be
+# overwritten. If you wish to make changes to this file (discouraged), you
+# should change apccontrol.sh.in and then rerun the configure process.
+#
+if [ -f ${SCRIPTDIR}/${1} -a -x ${SCRIPTDIR}/${1} ]
+then
+    ${SCRIPTDIR}/${1} ${2} ${3} ${4}
+    # exit code 99 means he does not want us to do default action
+    if [ $? = 99 ] ; then
+	exit 0
+    fi
+fi
+
+case "$1" in
+    killpower)
+	echo "Apccontrol doing: ${APCUPSD} --killpower on UPS ${2}" | (${WALL} 2>/dev/null || cat)
+	sleep 10
+	${APCUPSD} --killpower
+	echo "Apccontrol has done: ${APCUPSD} --killpower on UPS ${2}" | (${WALL} 2>/dev/null || cat)
+    ;;
+    commfailure)
+	#echo "Warning communications lost with UPS ${2}" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication lost with UPS ${2}" >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication lost with UPS ${2}" | mail -s "Communication lost with UPS ${2}" support@innovateit.co.mz
+    ;;
+    commok)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication restored with UPS ${2}" >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Communication restored with UPS ${2}" | mail -s "Communication restored with UPS ${2}" support@innovateit.co.mz
+    ;;
+#
+# powerout, onbattery, offbattery, mainsback events occur
+#   in that order.
+#
+    powerout)
+    ;;
+    onbattery)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power failure on UPS ${2}. Running on batteries." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power failure on UPS ${2}. Running on batteries." | mail -s "Power failure on UPS ${2}. Running on batteries." support@innovateit.co.mz
+    ;;
+    offbattery)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power has returned on UPS ${2}..." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power has returned on UPS ${2}..." | mail -s "Power has returned on UPS ${2}..." support@innovateit.co.mz
+    ;;
+    mainsback)
+	if [ -f /etc/apcupsd/powerfail ] ; then
+	   printf "Continuing with shutdown."  | ${WALL}
+	fi
+    ;;
+    failing)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery power exhausted on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery power exhausted on UPS ${2}. Doing shutdown." | mail -s "Battery power exhausted on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+    ;;
+    timeout)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery time limit exceeded on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Battery time limit exceeded on UPS ${2}. Doing shutdown." | mail -s "Battery time limit exceeded on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+    ;;
+    loadlimit)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery charge below limit on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery charge below limit on UPS ${2}. Doing shutdown." | mail -s "Remaining battery charge below limit on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+    ;;
+    runlimit)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." | mail -s "Remaining battery runtime below limit on UPS ${2}. Doing shutdown." support@innovateit.co.mz
+    ;;
+    doreboot)
+	echo "UPS ${2} initiating Reboot Sequence" | ${WALL}
+	${SHUTDOWN} -r now "apcupsd UPS ${2} initiated reboot"
+    ;;
+    doshutdown)
+	echo "UPS ${2} initiated Shutdown Sequence" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." | mail -s ".....Gracefully Shutting down ESXI.....Initiating shutdown script.....on ${2}." support@innovateit.co.mz
+	${SHUTDOWN} -h now "apcupsd UPS ${2} initiated shutdown"
+	ssh root@172.24.1.2 "nohup /vmfs/volumes/datastore1/scripts/graceful_shutdown.sh > /dev/null 2>&1 &"
+	service apcupsd restart
+    ;;
+    annoyme)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power problems with UPS ${2}. Please logoff." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Power problems with UPS ${2}. Please logoff." | mail -s "Power problems with UPS ${2}. Please logoff." support@innovateit.co.mz
+    ;;
+    emergency)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency Shutdown. Possible battery failure on UPS ${2}." >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency Shutdown. Possible battery failure on UPS ${2}." | mail -s "Emergency Shutdown. Possible battery failure on UPS ${2}." support@innovateit.co.mz
+    ;;
+    changeme)
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency! Batteries have failed on UPS ${2}. Change them NOW" >> "/home/pi/Desktop/apcupsd.events" | ${WALL}
+	echo $(date '+%d/%m/%Y %H:%M:%S') "Emergency! Batteries have failed on UPS ${2}. Change them NOW" | mail -s "Emergency! Batteries have failed on UPS ${2}. Change them NOW" support@innovateit.co.mz
+    ;;
+    remotedown)
+	echo "Remote Shutdown. Beginning Shutdown Sequence." | ${WALL}
+    ;;
+    startselftest)
+    ;;
+    endselftest)
+    ;;
+    battdetach)
+    ;;
+    battattach)
+    ;;
+    *)	echo "Usage: ${0##*/} command"
+	echo "	     warning: this script is intended to be launched by"
+	echo "	     apcupsd and should never be launched by users."
+	exit 1
+    ;;
+esac
